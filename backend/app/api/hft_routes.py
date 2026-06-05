@@ -73,3 +73,17 @@ def logs():
 @router.get("/scalping-stats")
 def scalping_stats():
     return {"strategies": engine.scalping_stats(), "catalog": SCALPING_STRATEGIES}
+
+
+@router.get("/explain")
+def explain():
+    from ..agents.explainability_agent import explain_signal
+    signals = engine.signals(20)
+    actionable = next((s for s in signals if s.get("side") in ("buy", "sell")), None)
+    if not actionable:
+        return {"explanation": None, "signal": None}
+    risk_check = engine.risk.check(actionable, spread_points=actionable.get("spread", 0))
+    exp = explain_signal(actionable, row=None,
+                         regime=engine.recent_regime.get("regime", ""),
+                         risk_check=risk_check)
+    return {"explanation": exp, "signal": actionable, "risk_check": risk_check}
