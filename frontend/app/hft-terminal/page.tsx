@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { usePoll } from "@/lib/usePoll";
 import {
@@ -32,15 +32,26 @@ interface MarketEvent {
 }
 
 export default function HftTerminalPage() {
-  const { data: market } = usePoll<MarketEvent>(() => api.marketEvent() as Promise<MarketEvent>, 700);
-  const { data: signalsRes } = usePoll<{ signals: HftSignal[] }>(() => api.hftSignals(), 800);
-  const { data: queueRes } = usePoll<{ orders: OrderState[] }>(() => api.executionQueue(), 900);
-  const { data: latency } = usePoll<Latency>(() => api.latency() as Promise<Latency>, 1200);
-  const { data: risk } = usePoll<RiskState>(() => api.riskState() as Promise<RiskState>, 1000);
-  const { data: logsRes } = usePoll<{ logs: any[] }>(() => api.hftLogs(), 900);
-  const { data: paper } = usePoll<any>(() => api.paperState(), 1500);
+  // Poll every 500ms (WebSocket-ready architecture; polling is used in Cursor online).
+  const { data: market } = usePoll<MarketEvent>(() => api.marketEvent() as Promise<MarketEvent>, 500);
+  const { data: signalsRes } = usePoll<{ signals: HftSignal[] }>(() => api.hftSignals(), 500);
+  const { data: queueRes } = usePoll<{ orders: OrderState[] }>(() => api.executionQueue(), 500);
+  const { data: latency } = usePoll<Latency>(() => api.latency() as Promise<Latency>, 1000);
+  const { data: risk } = usePoll<RiskState>(() => api.riskState() as Promise<RiskState>, 700);
+  const { data: logsRes } = usePoll<{ logs: any[] }>(() => api.hftLogs(), 700);
+  const { data: paper } = usePoll<any>(() => api.paperState(), 1000);
 
   const state = market?.state;
+
+  // Auto-start Demo Replay so the terminal is live on first load (no broker/data needed).
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (autoStarted.current) return;
+    if (market && state && !state.running && (state.total === 0 || state.progress >= 100 || state.cursor === 0)) {
+      autoStarted.current = true;
+      api.replayStart({ symbol: "XAUUSD", timeframe: "M5", speed: 10, auto_execute: true }).catch(() => {});
+    }
+  }, [market, state]);
   const onStart = useCallback(() => api.replayStart({ symbol: "XAUUSD", timeframe: "M5", speed: state?.speed || 10, auto_execute: true }), [state?.speed]);
   const onKill = useCallback((a: boolean) => api.killSwitch({ activate: a, reason: a ? "Manual kill switch (terminal)" : "" }), []);
   const onClosePos = useCallback((id: string) => api.closeOrder({ trade_id: id }), []);

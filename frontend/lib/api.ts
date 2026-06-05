@@ -1,5 +1,11 @@
+// In Cursor online / forwarded previews the browser cannot reach the VM's
+// 127.0.0.1:8000 directly, so we default to a SAME-ORIGIN proxy path ("/backend")
+// which Next.js rewrites to the backend server-side (see next.config.mjs).
+// Override with NEXT_PUBLIC_API_URL or NEXT_PUBLIC_API_BASE for local/direct setups.
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "/backend";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
