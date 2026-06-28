@@ -63,7 +63,30 @@ frontend/      app/<pages> · components/<layout|hft|charts|trading|dashboard|ui
 
 ---
 
-## Backend setup
+## 🟡 Streamlit edition (3D + motion-graphics UI)
+
+A self-contained **Streamlit** app provides an immersive **3D + motion-graphics** interface that
+**reuses the same Python engine** in `backend/app` — no API server required. It ships demo data and
+lets you **upload your own CSV to test the model**.
+
+```bash
+pip install -r requirements.txt        # root requirements (Streamlit deployment)
+streamlit run streamlit_app.py         # http://localhost:8501
+```
+
+Deploy to **Streamlit Community Cloud**: push to GitHub → share.streamlit.io → New app → Main file
+path = `streamlit_app.py` (root `requirements.txt` and `.streamlit/config.toml` are auto-detected).
+
+Highlights:
+- Animated gradient/grid background, glassmorphism metric cards, motion transitions.
+- **3D charts**: equity ribbon, price-path build-up, monthly-returns surface, strategy landscape, regime space.
+- **Animated HFT terminal** with live signal scanner, execution queue, paper fills, risk gauges, kill switch.
+- **Data Center → Upload your data** (tick or OHLCV CSV) to run strategies/backtests/replay on it.
+- Ready-made sample files in `sample_data/` (`XAUUSD_M5_sample.csv`, `XAUUSD_ticks_sample.csv`, `EURUSD_M15_sample.csv`).
+
+---
+
+## Backend setup (FastAPI API + Next.js terminal)
 
 Requirements: Python 3.10+
 
